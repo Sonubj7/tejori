@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Redirecting…</title>
+  <script>
+    // Get the "ref" query parameter from the URL
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+
+    // Build your deep-link URL with or without the ref
+    const nativeUrl = ref
+            ? `tejori://subscription/payment-success?ref=${encodeURIComponent(ref)}`
+            : 'tejori://subscription/payment-success';
+
+    // Add meta-refresh fallback dynamically
+    const meta = document.createElement('meta');
+    meta.httpEquiv = 'refresh';
+    meta.content = `0; url=${nativeUrl}`;
+    document.head.appendChild(meta);
+
+    // JS redirect in case meta doesn't work or is blocked
+    window.location.replace(nativeUrl);
+
+    // Optional: write fallback link after the DOM loads
+    window.addEventListener('DOMContentLoaded', () => {
+      const message = document.getElementById('fallback-message');
+      message.innerHTML = `Redirecting… If it doesn't work, <a href="${nativeUrl}">tap here</a>.`;
+    });
+  </script>
+</head>
+<body>
+<p id="fallback-message">Redirecting into the Tejori app…</p>
+</body>
+</html>
