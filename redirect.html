@@ -4,14 +4,41 @@
   <meta charset="utf-8"/>
   <title>Redirecting…</title>
   <script>
-    // Get the "ref" query parameter from the URL
+    // Get all query parameters from the URL
     const params = new URLSearchParams(window.location.search);
+    
+    // Check if this is a UAE Pass signing callback
+    const status = params.get('status');
+    const signerProcessId = params.get('signer_process_id');
+    const csrfToken = params.get('csrf_token');
+    
+    // Check if this is a payment callback
     const ref = params.get('ref');
 
-    // Build your deep-link URL with or without the ref
-    const nativeUrl = ref
-            ? `tejori://subscription/payment-success?ref=${encodeURIComponent(ref)}`
-            : 'tejori://subscription/payment-success';
+    let nativeUrl;
+
+    if (status && signerProcessId) {
+      // UAE Pass signing callback
+      console.log('UAE Pass signing callback detected:', { status, signerProcessId, csrfToken });
+      
+      nativeUrl = `tejori://callback?status=${encodeURIComponent(status)}&signer_process_id=${encodeURIComponent(signerProcessId)}`;
+      
+      if (csrfToken) {
+        nativeUrl += `&csrf_token=${encodeURIComponent(csrfToken)}`;
+      }
+      
+    } else if (ref) {
+      // Payment callback
+      console.log('Payment callback detected:', { ref });
+      nativeUrl = `tejori://subscription/payment-success?ref=${encodeURIComponent(ref)}`;
+      
+    } else {
+      // Default fallback
+      console.log('No specific callback detected, using default');
+      nativeUrl = 'tejori://callback';
+    }
+
+    console.log('Redirecting to:', nativeUrl);
 
     // Add meta-refresh fallback dynamically
     const meta = document.createElement('meta');
@@ -25,7 +52,8 @@
     // Optional: write fallback link after the DOM loads
     window.addEventListener('DOMContentLoaded', () => {
       const message = document.getElementById('fallback-message');
-      message.innerHTML = `Redirecting… If it doesn't work, <a href="${nativeUrl}">tap here</a>.`;
+      const statusText = status ? `Status: ${status}` : 'Redirecting';
+      message.innerHTML = `${statusText}… If it doesn't work, <a href="${nativeUrl}">tap here</a>.`;
     });
   </script>
 </head>
